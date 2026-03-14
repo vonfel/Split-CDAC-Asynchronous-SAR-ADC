@@ -1,0 +1,49 @@
+# ── Jupyter Notebooks ─────────────────────────────────────────────────────────
+*.ipynb
+.ipynb_checkpoints/
+
+# ── Scripts not ready for public repo ─────────────────────────────────────────
+extract_inl_dnl_cadence.py
+
+# ── Course report / submission documents ──────────────────────────────────────
+ECE5404_Project2_Complete_Guide.docx
+ECE5404_Project2_VelasquezFonseca_Victor.docx
+*.pdf
+
+# ── Word temp / lock files ────────────────────────────────────────────────────
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
+# ── IDE folders ───────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+
+# ── Python artifacts ──────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.env
+venv/
+
+# ── OS artifacts ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Cadence / EDA tool artifacts ──────────────────────────────────────────────
+*.log
+*.cdslck
+*.swp
+cds.lib
+hdl.var
+CDSLCK
+# Cadence simulation output directories (keep schematics PNGs, ignore sim data)
+psf/
+simulation/
+xcelium.d/
+.simvision/

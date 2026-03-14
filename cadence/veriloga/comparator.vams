@@ -1,0 +1,39 @@
+// =============================================================================
+// File    : comparator.vams
+// Cell    : comparator  |  View: VerilogA
+// Library : victorvf_lib
+// Project : 8-bit Split-CDAC SAR ADC — ECE5404, Virginia Tech
+// Author  : Victor Velasquez Fonseca
+//
+// Description:
+//   Ideal behavioral comparator for Spectre simulation.
+//   Output = VDD  when INP > INN  (VDAC < VIN_held → keep trial bit)
+//   Output = VSS  when INP < INN  (VDAC > VIN_held → clear trial bit)
+//   High-gain (1000 V/V) with rail clamping — no metastability modeled.
+//
+// Ports:
+//   INP  — positive input  (connect to VIN_held / Vsample)
+//   INN  — negative input  (connect to VDAC)
+//   OUT  — digital output  (connect to SAR logic COMP input)
+//   VDD  — supply rail
+//   VSS  — ground rail
+// =============================================================================
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module comparator (INP, INN, OUT, VDD, VSS);
+
+    input  INP, INN, VDD, VSS;
+    output OUT;
+    electrical INP, INN, OUT, VDD, VSS;
+
+    parameter real gain = 1000.0;   // V/V — large enough for clean switching
+
+    analog begin
+        // Amplify differential input, clamp to supply rails
+        V(OUT) <+ max(V(VSS), min(V(VDD),
+                      0.5*(V(VDD) + V(VSS)) + gain*(V(INP) - V(INN))));
+    end
+
+endmodule

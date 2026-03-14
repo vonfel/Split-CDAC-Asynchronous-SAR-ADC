@@ -1,0 +1,109 @@
+// =============================================================================
+// File    : sar_logic_async.vams
+// Cell    : sar_logic_async  |  View: VerilogA
+// Library : victorvf_lib
+// Project : 8-bit Split-CDAC SAR ADC — ECE5404, Virginia Tech
+// Author  : Victor Velasquez Fonseca
+//
+// Description:
+//   Behavioral Asynchronous SAR logic for Spectre transient simulation.
+//   Self-timed: each bit decision takes T_bit (10 ns) without a bit clock.
+//   Total conversion = 8 × 10ns = 80ns < 100ns (half of 200ns CLK period).
+//
+// Timing (5 MHz, 200 ns period):
+//   CLK rising  → SAMPLE=1, reset SAR, connect bottom plates to VIN
+//   CLK falling → SAMPLE=0, set MSB=1 trial, begin conversion
+//   Every T_bit → read COMP, keep/clear current bit, set next trial bit
+//
+// Ports:
+//   CLK    — master 5 MHz clock
+//   COMP   — comparator output (1 = VIN > VDAC, 0 = VIN < VDAC)
+//   SAMPLE — high during sample phase → connects to analog_mux_ideal 'sample'
+//   BIT7–0 — SAR bit decisions → connects to analog_mux_ideal 'sel' pins
+//            BIT7 = MSB (controls CM3), BIT0 = LSB (controls CL0)
+// =============================================================================
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module sar_logic_async (CLK, COMP, SAMPLE,
+                        BIT7, BIT6, BIT5, BIT4,
+                        BIT3, BIT2, BIT1, BIT0);
+
+    input  CLK, COMP;
+    output SAMPLE, BIT7, BIT6, BIT5, BIT4, BIT3, BIT2, BIT1, BIT0;
+    electrical CLK, COMP, SAMPLE;
+    electrical BIT7, BIT6, BIT5, BIT4, BIT3, BIT2, BIT1, BIT0;
+
+    // ── Parameters ────────────────────────────────────────────────────────────
+    parameter real VDD   = 1.8;    // Digital high level (V)
+    parameter real Vth   = 0.9;    // Digital input threshold (V)
+    parameter real T_bit = 10n;    // Time per bit decision (s) — 8 bits = 80 ns
+
+    // ── Internal state ────────────────────────────────────────────────────────
+    integer sar_reg;    // 8-bit SAR register (accumulates result)
+    integer bit_idx;    // Current bit index: 7 (MSB) → 0 (LSB), -1 = idle
+    integer sampling;   // 1 during sample phase, 0 during conversion
+    real    t_next;     // Absolute time of next bit decision event
+
+    analog begin
+
+        // ── Initialization ────────────────────────────────────────────────────
+        @(initial_step) begin
+            sar_reg  = 0;
+            bit_idx  = -1;
+            sampling = 0;
+            t_next   = 1.0e30;   // Disable timer until first conversion
+        end
+
+        // ── Rising CLK edge: begin sampling phase ─────────────────────────────
+        // Reset SAR register; SAMPLE=1 routes all bottom plates to VIN via mux
+        @(cross(V(CLK) - Vth, +1)) begin
+            sar_reg  = 0;
+            bit_idx  = -1;
+            sampling = 1;
+            t_next   = 1.0e30;
+        end
+
+        // ── Falling CLK edge: end sampling, start conversion ──────────────────
+        // SAMPLE=0; set MSB (bit 7) as first trial; schedule first decision
+        @(cross(V(CLK) - Vth, -1)) begin
+            sampling = 0;
+            bit_idx  = 7;
+            sar_reg  = 128;              // 0b10000000 — MSB trial
+            t_next   = $abstime + T_bit; // Fire first bit decision after T_bit
+        end
+
+        // ── Bit decision event (self-timed) ───────────────────────────────────
+        // Reads COMP result for current bit; sets next trial bit; reschedules.
+        @(timer(t_next)) begin
+            if (bit_idx >= 0) begin
+                // Evaluate: clear current bit if VDAC was too high (COMP=0)
+                if (V(COMP) < Vth)
+                    sar_reg = sar_reg - (1 << bit_idx);   // Clear trial bit
+
+                bit_idx = bit_idx - 1;
+
+                if (bit_idx >= 0) begin
+                    sar_reg = sar_reg + (1 << bit_idx);   // Set next trial bit
+                    t_next  = $abstime + T_bit;            // Schedule next decision
+                end else begin
+                    t_next = 1.0e30;   // All 8 bits done — disable timer
+                end
+            end
+        end
+
+        // ── Continuous output drivers ─────────────────────────────────────────
+        V(SAMPLE) <+ (sampling) ? VDD : 0.0;
+        V(BIT7)   <+ ((sar_reg >> 7) & 1) ? VDD : 0.0;
+        V(BIT6)   <+ ((sar_reg >> 6) & 1) ? VDD : 0.0;
+        V(BIT5)   <+ ((sar_reg >> 5) & 1) ? VDD : 0.0;
+        V(BIT4)   <+ ((sar_reg >> 4) & 1) ? VDD : 0.0;
+        V(BIT3)   <+ ((sar_reg >> 3) & 1) ? VDD : 0.0;
+        V(BIT2)   <+ ((sar_reg >> 2) & 1) ? VDD : 0.0;
+        V(BIT1)   <+ ((sar_reg >> 1) & 1) ? VDD : 0.0;
+        V(BIT0)   <+ ((sar_reg >> 0) & 1) ? VDD : 0.0;
+
+    end
+
+endmodule
