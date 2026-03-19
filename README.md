@@ -1,11 +1,11 @@
-# ⚡ 8-bit Asynchronous Split-CDAC SAR ADC — SkyWater SKY130 PDK
+# ⚡ 8-bit Asynchronous Split-CDAC SAR ADC - SkyWater SKY130 PDK
 
 **Course:** ECE5404 Advanced Analog IC Design | Virginia Tech, Spring 2026
 **Author:** Victor Velasquez Fonseca
 
 ---
 
-## 🚀 Overview
+##  Overview
 
 Full custom design and simulation of an **8-bit, 5 MS/s Successive Approximation Register (SAR) ADC** implemented in the open-source **SkyWater SKY130 130 nm PDK** using **Cadence Virtuoso** and **Spectre**.
 
@@ -15,7 +15,7 @@ The SAR controller was developed at two abstraction levels: a **Verilog-A behavi
 
 ---
 
-## 📊 Specifications
+##  Specifications
 
 | Parameter | Target / Value |
 |-----------|---------------|
@@ -32,7 +32,7 @@ The SAR controller was developed at two abstraction levels: a **Verilog-A behavi
 
 ---
 
-## 🧠 Engineering Trade-offs & Key Design Decisions
+##  Engineering Trade-offs & Key Design Decisions
 
 ### 1. Split-CDAC vs. Full Binary-Weighted Architecture
 A full 8-bit binary-weighted CDAC requires 256 Cu, with the MSB capacitor alone requiring 128 Cu. The 4-4 split architecture caps the largest capacitor at 8 Cu, reducing total capacitance by 8x. This directly minimizes die area, reduces switching power ($P \propto C \cdot V^2 \cdot f$), and mitigates sensitivity to process-induced capacitor mismatch.
@@ -45,7 +45,7 @@ A standard synchronous 8-bit SAR running at 5 MS/s requires an external bit-cloc
 
 ---
 
-## 🧩 Architecture & 4-Block Hierarchy
+##  Architecture & 4-Block Hierarchy
 
 ```
 VIN ──► [Bootstrapped S/H] ──Vsample──► [Split-CDAC] ──VDAC──► [Comparator] ──► [SAR Logic]
@@ -62,7 +62,7 @@ VIN ──► [Bootstrapped S/H] ──Vsample──► [Split-CDAC] ──VDAC�
 
 ---
 
-## 🧮 Split-CDAC Capacitor Array
+##  Split-CDAC Capacitor Array
 
 | Capacitor | Sub-Array | Weight | Multiplier (M) | Value (fF) |
 |-----------|-----------|--------|----------------|-----------|
@@ -79,7 +79,7 @@ VIN ──► [Bootstrapped S/H] ──Vsample──► [Split-CDAC] ──VDAC�
 
 ---
 
-## 💻 Schematics (Cadence Virtuoso / SKY130)
+##  Schematics (Cadence Virtuoso / SKY130)
 
 ### Top-Level SAR ADC
 ![Top-Level Schematic](cadence/schematics/top_level_SAR_ADC.png)
@@ -95,7 +95,7 @@ VIN ──► [Bootstrapped S/H] ──Vsample──► [Split-CDAC] ──VDAC�
 
 ---
 
-## 📈 Simulation Results (Cadence Spectre)
+##  Simulation Results (Cadence Spectre)
 
 Full 55 µs transient simulation. VIN ramp from 0 V to 0.9375 V, sweeping all 256 output codes.
 
@@ -110,7 +110,7 @@ Full 55 µs transient simulation. VIN ramp from 0 V to 0.9375 V, sweeping all 25
 
 ---
 
-## 🐍 Ideal Python Model — INL / DNL
+##  Ideal Python Model - INL / DNL
 
 Prior to Cadence implementation, the complete transfer function was modeled in Python to verify INL and DNL. The model confirmed that with $C_B$ = 1 Cu, the design passes all linearity specifications.
 
@@ -125,7 +125,7 @@ python split_cdac_model.py
 
 ---
 
-## ⚙️ SAR Controller — SystemVerilog FSM
+##  SAR Controller - SystemVerilog FSM
 
 A synthesizable RTL implementation of the asynchronous SAR controller is provided alongside the Verilog-A simulation model. The FSM is parameterized by `N` (ADC resolution) and utilizes self-timed states (`IDLE → SAMPLE → CONV → DONE`) that advance on the `comp_valid` strobe.
 
@@ -140,7 +140,7 @@ module sar_fsm #(parameter int unsigned N = 8) (
 
 ---
 
-## 📂 Repository Structure
+##  Repository Structure
 
 ```
 Split-CDAC-Asynchronous-SAR-ADC/
@@ -163,7 +163,7 @@ Split-CDAC-Asynchronous-SAR-ADC/
 
 ---
 
-## 📚 References
+##  References
 
 1. B. Razavi, *Design of Analog CMOS Integrated Circuits*, 2nd ed., McGraw-Hill Education.
 2. Z. Xu, et al., "A 12-Bit 50 MS/s Split-CDAC-Based SAR ADC Integrating Input Programmable Gain Amplifier and Reference Voltage Buffer," *Electronics*, 2022.
@@ -174,4 +174,4 @@ Split-CDAC-Asynchronous-SAR-ADC/
 
 ---
 
-*ECE5404 Advanced Analog IC Design — Virginia Tech, Spring 2026*
+*ECE5404 Advanced Analog IC Design - Virginia Tech, Spring 2026*
